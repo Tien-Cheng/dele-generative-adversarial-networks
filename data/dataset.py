@@ -14,6 +14,17 @@ class CIFAR10DataModule(LightningDataModule):
         num_workers: int,
         transforms: Optional[list] = None,
     ):
+        """Defines the CIFAR10 Dataset
+
+        :param data_dir: Directory to save and load CIFAR10 dataset from
+        :type data_dir: str
+        :param batch_size: Number of images in each batch
+        :type batch_size: int
+        :param num_workers: For use in parallel processing
+        :type num_workers: int
+        :param transforms: Preprocessing steps to be applied to data, defaults to None (default set of transforms)
+        :type transforms: Optional[list], optional
+        """
         super().__init__()
         self.data_dir = data_dir
         self.batch_size = batch_size
@@ -29,10 +40,16 @@ class CIFAR10DataModule(LightningDataModule):
         self.num_classes = 10
 
     def prepare_data(self):
+        """Download dataset into data directory"""
         CIFAR10(self.data_dir, train=True, download=True)
         CIFAR10(self.data_dir, train=False, download=True)
 
-    def setup(self, stage=None):
+    def setup(self, stage: Optional[str] = None):
+        """Set up data splits for training, validation and testing
+
+        :param stage: if set to "fit", only loads training and val split, if set to "test", loads test split for evaluation, defaults to None (load all splits)
+        :type stage: Optional[str], optional
+        """
         if stage == "fit" or stage is None:
             cifar_full = CIFAR10(self.data_dir, train=True, transform=self.transform)
             self.cifar_train, self.cifar_val = random_split(cifar_full, [45000, 5000])
