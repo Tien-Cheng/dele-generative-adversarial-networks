@@ -31,12 +31,11 @@ class CIFAR10DataModule(LightningDataModule):
         self.num_workers = num_workers
 
         self.transform = T.Compose(
-            [T.ToTensor(), T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
+            [T.ToTensor()]
             if transforms is None
             else transforms
         )
 
-        self.dims = (3, 32, 32)
         self.num_classes = 10
 
     def prepare_data(self):
