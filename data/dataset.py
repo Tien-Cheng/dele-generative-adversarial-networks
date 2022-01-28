@@ -49,7 +49,9 @@ class CIFAR10DataModule(LightningDataModule):
             self.cifar_train = CIFAR10(
                 self.data_dir, train=True, transform=self.transform
             )
-
+            self.cifar_test = CIFAR10(
+                self.data_dir, train=False, transform=self.transform
+            )
         if stage == "test" or stage is None:
             self.cifar_test = CIFAR10(
                 self.data_dir, train=False, transform=self.transform
