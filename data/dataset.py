@@ -30,11 +30,7 @@ class CIFAR10DataModule(LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
 
-        self.transform = T.Compose(
-            [T.ToTensor()]
-            if transforms is None
-            else transforms
-        )
+        self.transform = T.Compose([T.ToTensor()] if transforms is None else transforms)
 
         self.num_classes = 10
 
@@ -50,8 +46,9 @@ class CIFAR10DataModule(LightningDataModule):
         :type stage: Optional[str], optional
         """
         if stage == "fit" or stage is None:
-            cifar_full = CIFAR10(self.data_dir, train=True, transform=self.transform)
-            self.cifar_train, self.cifar_val = random_split(cifar_full, [45000, 5000])
+            self.cifar_train = CIFAR10(
+                self.data_dir, train=True, transform=self.transform
+            )
 
         if stage == "test" or stage is None:
             self.cifar_test = CIFAR10(
@@ -64,11 +61,6 @@ class CIFAR10DataModule(LightningDataModule):
         )
 
     def val_dataloader(self):
-        return DataLoader(
-            self.cifar_val, batch_size=self.batch_size, num_workers=self.num_workers
-        )
-
-    def test_dataloader(self):
         return DataLoader(
             self.cifar_test, batch_size=self.batch_size, num_workers=self.num_workers
         )
