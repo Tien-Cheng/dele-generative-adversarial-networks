@@ -9,7 +9,7 @@ def visualize(
     imgs: torch.Tensor,
     labels: Optional[torch.Tensor] = None,
     label_names: Optional[List[str]] = None,
-    grid_shape: Tuple[int, int] = (3, 3),
+    grid_shape: Tuple[int, int] = (4, 4),
     figsize: Tuple[int, int] = (8, 8),
 ):
     if labels is None:
