@@ -30,7 +30,7 @@ def visualize(
     n_rows, n_cols = grid_shape
     fig, ax = plt.subplots(n_rows, n_cols, figsize=figsize)
     for img, label, subplot in zip(imgs, labels, ax.ravel()):
-        subplot.imshow(img)
+        subplot.imshow(img.permute(1, 2, 0))
         name = label_names[label]
         subplot.set_title(name)
     return fig
