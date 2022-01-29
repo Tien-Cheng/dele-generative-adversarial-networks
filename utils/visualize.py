@@ -10,7 +10,7 @@ def visualize(
     labels: Optional[torch.Tensor] = None,
     label_names: Optional[List[str]] = None,
     grid_shape: Tuple[int, int] = (3, 3),
-    figsize: Tuple[int, int] = (10, 10),
+    figsize: Tuple[int, int] = (8, 8),
 ):
     if labels is None:
         return vutils.make_grid(imgs)
@@ -31,6 +31,7 @@ def visualize(
     fig, ax = plt.subplots(n_rows, n_cols, figsize=figsize)
     for img, label, subplot in zip(imgs, labels, ax.ravel()):
         subplot.imshow(img.permute(1, 2, 0))
+        subplot.axis("off")
         name = label_names[label]
         subplot.set_title(name)
     return fig
