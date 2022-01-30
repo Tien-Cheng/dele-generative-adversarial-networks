@@ -144,6 +144,24 @@ class ResidualBlockDiscriminatorHead(nn.Module):
         padding: int = 1,
         activation: callable = F.relu,
     ):
+        """
+        A residual block without batch normalization for the input to the discriminator. The reason for not having the batch normalization is because applying it to the input layer can cause instability during training.
+
+        "Directly applying batchnorm to all layers however, resulted in sample oscillation and model instability. This was avoided by not applying batchnorm to the generator output layer and the discriminator input layer." - DCGAN Paper
+
+
+
+        :param in_ch: [description], defaults to 3
+        :type in_ch: int, optional
+        :param out_ch: [description], defaults to 128
+        :type out_ch: int, optional
+        :param kernel_size: [description], defaults to 3
+        :type kernel_size: int, optional
+        :param padding: [description], defaults to 1
+        :type padding: int, optional
+        :param activation: [description], defaults to F.relu
+        :type activation: callable, optional
+        """
         self.activation = activation
         self.conv1 = spectral_norm(
             nn.Conv2d(in_ch, out_ch, kernel_size=kernel_size, padding=padding)
