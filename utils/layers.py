@@ -133,3 +133,32 @@ class ResidualBlockDiscriminator(nn.Module):
         if self.downsample is not None:
             h = self.downsample(h)
         return h + self.downsample(x)
+
+
+class ResidualBlockDiscriminatorHead(nn.Module):
+    def __init__(
+        self,
+        in_ch: int = 3,
+        out_ch: int = 128,
+        kernel_size: int = 3,
+        padding: int = 1,
+        activation: callable = F.relu,
+    ):
+        self.activation = activation
+        self.conv1 = spectral_norm(
+            nn.Conv2d(in_ch, out_ch, kernel_size=kernel_size, padding=padding)
+        )
+        self.conv2 = spectral_norm(
+            nn.Conv2d(out_ch, out_ch, kernel_size=kernel_size, padding=padding)
+        )
+        self.downsample = nn.AvgPool2d(2)
+        self.shortcut = spectral_norm(
+            nn.Conv2d(in_ch, out_ch, kernel_size=kernel_size, padding=0)
+        )
+
+    def forward(self, x, y):
+        h = self.conv1(x)
+        h = self.activation(h)
+        h = self.conv2(h)
+        h = self.downsample(h)
+        return h + self.shortcut(self.downsample(x))
