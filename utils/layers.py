@@ -93,8 +93,8 @@ class ResidualBlockGenerator(nn.Module):
             self.conv1 = spectral_norm(self.conv1)
             self.conv2 = spectral_norm(self.conv2)
             self.shortcut = spectral_norm(self.shortcut)
-        self.bn1 = ConditionalBatchNorm2d(in_ch, num_classes)
-        self.bn2 = ConditionalBatchNorm2d(out_ch, num_classes)
+        self.bn1 = ConditionalBatchNorm2d(in_ch)
+        self.bn2 = ConditionalBatchNorm2d(out_ch)
 
     def forward(self, x: torch.Tensor, y: torch.Tensor):
         h = self.bn1(x, y)
@@ -196,8 +196,7 @@ class ResidualBlockDiscriminatorHead(nn.Module):
 class ConditionalBatchNorm2d(nn.Module):
     def __init__(
         self,
-        output_size,
-        input_size,
+        num_features,
         eps=1e-5,
         momentum=0.1,
         norm_style="bn",
@@ -216,10 +215,10 @@ class ConditionalBatchNorm2d(nn.Module):
         :type norm_style: str, optional
         """
         super().__init__()
-        self.output_size, self.input_size = output_size, input_size
+        self.num_features = num_features
         # Prepare gain and bias layers
-        self.gain = spectral_norm(nn.Linear(input_size, output_size))
-        self.bias = spectral_norm(nn.Linear(input_size, output_size))
+        self.gain = spectral_norm(nn.Linear(num_features, num_features))
+        self.bias = spectral_norm(nn.Linear(num_features, num_features))
         # epsilon to avoid dividing by 0
         self.eps = eps
         # Momentum
@@ -228,8 +227,8 @@ class ConditionalBatchNorm2d(nn.Module):
         self.norm_style = norm_style
 
         if self.norm_style in ["bn", "in"]:
-            self.register_buffer("stored_mean", torch.zeros(output_size))
-            self.register_buffer("stored_var", torch.ones(output_size))
+            self.register_buffer("stored_mean", torch.zeros(num_features))
+            self.register_buffer("stored_var", torch.ones(num_features))
 
     def forward(self, x, y):
         # Calculate class-conditional gains and biases
