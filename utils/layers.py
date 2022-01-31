@@ -21,34 +21,34 @@ class NormalizeInverse(T.Normalize):
         return super().__call__(tensor.clone())
 
 
-class ConditionalBatchNorm2d(nn.Module):
-    def __init__(self, num_features: int, num_classes: int = 10):
-        """Conditional Batch Normalization from conditional Spectral Normalization GAN.
-        Works as a form of Batch Normalization, with the weights and biases dependent on the class. Initially introduced in cGANs with Projection Discriminator.
+# class ConditionalBatchNorm2d(nn.Module):
+#     def __init__(self, num_features: int, num_classes: int = 10):
+#         """Conditional Batch Normalization from conditional Spectral Normalization GAN.
+#         Works as a form of Batch Normalization, with the weights and biases dependent on the class. Initially introduced in cGANs with Projection Discriminator.
 
-        Implementation taken from: https://github.com/pytorch/pytorch/issues/8985#issuecomment-405080775
+#         Implementation taken from: https://github.com/pytorch/pytorch/issues/8985#issuecomment-405080775
 
-        :param num_features: [description]
-        :type num_features: [type]
-        :param num_classes: [description]
-        :type num_classes: [type]
-        """
-        super().__init__()
-        self.num_features = num_features
-        self.bn = nn.BatchNorm2d(num_features, affine=False)
-        self.embed = nn.Embedding(num_classes, num_features * 2)
-        self.embed.weight.data[:, :num_features].normal_(
-            1, 0.02
-        )  # Initialise scale at N(1, 0.02)
-        self.embed.weight.data[:, num_features:].zero_()  # Initialise bias at 0
+#         :param num_features: [description]
+#         :type num_features: [type]
+#         :param num_classes: [description]
+#         :type num_classes: [type]
+#         """
+#         super().__init__()
+#         self.num_features = num_features
+#         self.bn = nn.BatchNorm2d(num_features, affine=False)
+#         self.embed = nn.Embedding(num_classes, num_features * 2)
+#         self.embed.weight.data[:, :num_features].normal_(
+#             1, 0.02
+#         )  # Initialise scale at N(1, 0.02)
+#         self.embed.weight.data[:, num_features:].zero_()  # Initialise bias at 0
 
-    def forward(self, x: torch.Tensor, y: torch.Tensor):
-        out = self.bn(x)
-        gamma, beta = self.embed(y).chunk(2, 1)
-        out = gamma.view(-1, self.num_features, 1, 1) * out + beta.view(
-            -1, self.num_features, 1, 1
-        )
-        return out
+#     def forward(self, x: torch.Tensor, y: torch.Tensor):
+#         out = self.bn(x)
+#         gamma, beta = self.embed(y).chunk(2, 1)
+#         out = gamma.view(-1, self.num_features, 1, 1) * out + beta.view(
+#             -1, self.num_features, 1, 1
+#         )
+#         return out
 
 
 class ResidualBlockGenerator(nn.Module):
@@ -193,7 +193,7 @@ class ResidualBlockDiscriminatorHead(nn.Module):
         return h + self.shortcut(self.downsample(x))
 
 
-class ccbn(nn.Module):
+class ConditionalBatchNorm2d(nn.Module):
     def __init__(
         self,
         output_size,
@@ -201,8 +201,6 @@ class ccbn(nn.Module):
         which_linear,
         eps=1e-5,
         momentum=0.1,
-        cross_replica=False,
-        mybn=False,
         norm_style="bn",
     ):
         """https://github.com/ajbrock/BigGAN-PyTorch/blob/98459431a5d618d644d54cd1e9fceb1e5045648d/layers.py#L278
@@ -224,19 +222,15 @@ class ccbn(nn.Module):
         :param norm_style: [description], defaults to "bn"
         :type norm_style: str, optional
         """
-        super(ccbn, self).__init__()
+        super().__init__()
         self.output_size, self.input_size = output_size, input_size
         # Prepare gain and bias layers
-        self.gain = which_linear(input_size, output_size)
-        self.bias = which_linear(input_size, output_size)
+        self.gain = nn.Linear(input_size, output_size)
+        self.bias = nn.Linear(input_size, output_size)
         # epsilon to avoid dividing by 0
         self.eps = eps
         # Momentum
         self.momentum = momentum
-        # Use cross-replica batchnorm?
-        self.cross_replica = cross_replica
-        # Use my batchnorm?
-        self.mybn = mybn
         # Norm style?
         self.norm_style = norm_style
 
@@ -248,36 +242,31 @@ class ccbn(nn.Module):
         # Calculate class-conditional gains and biases
         gain = (1 + self.gain(y)).view(y.size(0), -1, 1, 1)
         bias = self.bias(y).view(y.size(0), -1, 1, 1)
-        # If using my batchnorm
-        if self.mybn or self.cross_replica:
-            return self.bn(x, gain=gain, bias=bias)
-        # else:
-        else:
-            if self.norm_style == "bn":
-                out = F.batch_norm(
-                    x,
-                    self.stored_mean,
-                    self.stored_var,
-                    None,
-                    None,
-                    self.training,
-                    0.1,
-                    self.eps,
-                )
-            elif self.norm_style == "in":
-                out = F.instance_norm(
-                    x,
-                    self.stored_mean,
-                    self.stored_var,
-                    None,
-                    None,
-                    self.training,
-                    0.1,
-                    self.eps,
-                )
-            elif self.norm_style == "nonorm":
-                out = x
-            return out * gain + bias
+        if self.norm_style == "bn":
+            out = F.batch_norm(
+                x,
+                self.stored_mean,
+                self.stored_var,
+                None,
+                None,
+                self.training,
+                0.1,
+                self.eps,
+            )
+        elif self.norm_style == "in":
+            out = F.instance_norm(
+                x,
+                self.stored_mean,
+                self.stored_var,
+                None,
+                None,
+                self.training,
+                0.1,
+                self.eps,
+            )
+        elif self.norm_style == "nonorm":
+            out = x
+        return out * gain + bias
 
     def extra_repr(self):
         s = "out: {output_size}, in: {input_size},"
