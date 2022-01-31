@@ -225,8 +225,8 @@ class ConditionalBatchNorm2d(nn.Module):
         super().__init__()
         self.output_size, self.input_size = output_size, input_size
         # Prepare gain and bias layers
-        self.gain = nn.Linear(input_size, output_size)
-        self.bias = nn.Linear(input_size, output_size)
+        self.gain = spectral_norm(nn.Linear(input_size, output_size))
+        self.bias = spectral_norm(nn.Linear(input_size, output_size))
         # epsilon to avoid dividing by 0
         self.eps = eps
         # Momentum
@@ -267,8 +267,3 @@ class ConditionalBatchNorm2d(nn.Module):
         elif self.norm_style == "nonorm":
             out = x
         return out * gain + bias
-
-    def extra_repr(self):
-        s = "out: {output_size}, in: {input_size},"
-        s += " cross_replica={cross_replica}"
-        return s.format(**self.__dict__)
