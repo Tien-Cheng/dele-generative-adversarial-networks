@@ -177,7 +177,7 @@ class ResidualBlockDiscriminatorHead(nn.Module):
             nn.Conv2d(in_ch, out_ch, kernel_size=kernel_size, padding=0)
         )
 
-    def forward(self, x, y):
+    def forward(self, x):
         h = self.conv1(x)
         h = self.activation(h)
         h = self.conv2(h)
