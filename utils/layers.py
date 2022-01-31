@@ -82,6 +82,7 @@ class ResidualBlockGenerator(nn.Module):
         :param use_spectral_norm: [description], defaults to True
         :type use_spectral_norm: bool, optional
         """
+        super().__init__()
         self.activation = activation
         self.num_classes = num_classes
         self.upsample = None if upsample is False else nn.Upsample(scale_factor=2)
@@ -116,6 +117,7 @@ class ResidualBlockDiscriminator(nn.Module):
         downsample: bool = False,
         use_spectral_norm: bool = True,
     ):
+        super().__init__()
         self.activation = activation
         self.downsample = None if downsample else nn.AvgPool2d(2)
         self.conv1 = nn.Conv2d(in_ch, out_ch, kernel_size=kernel_size, padding=padding)
@@ -162,6 +164,7 @@ class ResidualBlockDiscriminatorHead(nn.Module):
         :param activation: [description], defaults to F.relu
         :type activation: callable, optional
         """
+        super().__init__()
         self.activation = activation
         self.conv1 = spectral_norm(
             nn.Conv2d(in_ch, out_ch, kernel_size=kernel_size, padding=padding)
