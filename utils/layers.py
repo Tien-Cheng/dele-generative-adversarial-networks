@@ -198,7 +198,6 @@ class ConditionalBatchNorm2d(nn.Module):
         self,
         output_size,
         input_size,
-        which_linear,
         eps=1e-5,
         momentum=0.1,
         norm_style="bn",
@@ -209,16 +208,10 @@ class ConditionalBatchNorm2d(nn.Module):
         :type output_size: [type]
         :param input_size: [description]
         :type input_size: [type]
-        :param which_linear: [description]
-        :type which_linear: [type]
         :param eps: [description], defaults to 1e-5
         :type eps: [type], optional
         :param momentum: [description], defaults to 0.1
         :type momentum: float, optional
-        :param cross_replica: [description], defaults to False
-        :type cross_replica: bool, optional
-        :param mybn: [description], defaults to False
-        :type mybn: bool, optional
         :param norm_style: [description], defaults to "bn"
         :type norm_style: str, optional
         """
