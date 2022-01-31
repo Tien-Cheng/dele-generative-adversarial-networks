@@ -125,13 +125,12 @@ class ResidualBlockDiscriminator(nn.Module):
         self.downsample = None if downsample else nn.AvgPool2d(2)
         self.conv1 = nn.Conv2d(in_ch, out_ch, kernel_size=kernel_size, padding=padding)
         self.conv2 = nn.Conv2d(out_ch, out_ch, kernel_size=kernel_size, padding=padding)
-        self.shortcut = spectral_norm(
-            nn.Conv2d(in_ch, out_ch, kernel_size=1, padding=0)
-        )
+        self.shortcut = nn.Conv2d(in_ch, out_ch, kernel_size=1, padding=0)
 
         if use_spectral_norm:
             self.conv1 = spectral_norm(self.conv1)
             self.conv2 = spectral_norm(self.conv2)
+            self.shortcut = spectral_norm(self.shortcut)
 
     def forward(self, x):
         h = self.activation(x)
@@ -152,6 +151,7 @@ class ResidualBlockDiscriminatorHead(nn.Module):
         kernel_size: int = 3,
         padding: int = 1,
         activation: callable = F.relu,
+        use_spectral_norm: bool = True,
     ):
         """
         A residual block without batch normalization for the input to the discriminator. The reason for not having the batch normalization is because applying it to the input layer can cause instability during training.
@@ -173,16 +173,17 @@ class ResidualBlockDiscriminatorHead(nn.Module):
         """
         super().__init__()
         self.activation = activation
-        self.conv1 = spectral_norm(
-            nn.Conv2d(in_ch, out_ch, kernel_size=kernel_size, padding=padding)
-        )
-        self.conv2 = spectral_norm(
-            nn.Conv2d(out_ch, out_ch, kernel_size=kernel_size, padding=padding)
-        )
+        self.conv1 = nn.Conv2d(in_ch, out_ch, kernel_size=kernel_size, padding=padding)
+
+        self.conv2 = nn.Conv2d(out_ch, out_ch, kernel_size=kernel_size, padding=padding)
+
         self.downsample = nn.AvgPool2d(2)
-        self.shortcut = spectral_norm(
-            nn.Conv2d(in_ch, out_ch, kernel_size=1, padding=0)
-        )
+        self.shortcut = nn.Conv2d(in_ch, out_ch, kernel_size=1, padding=0)
+
+        if use_spectral_norm:
+            self.conv1 = spectral_norm(self.conv1)
+            self.conv2 = spectral_norm(self.conv2)
+            self.shortcut = spectral_norm(self.shortcut)
 
     def forward(self, x):
         h = self.conv1(x)
