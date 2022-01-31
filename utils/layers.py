@@ -191,3 +191,95 @@ class ResidualBlockDiscriminatorHead(nn.Module):
         h = self.conv2(h)
         h = self.downsample(h)
         return h + self.shortcut(self.downsample(x))
+
+
+class ccbn(nn.Module):
+    def __init__(
+        self,
+        output_size,
+        input_size,
+        which_linear,
+        eps=1e-5,
+        momentum=0.1,
+        cross_replica=False,
+        mybn=False,
+        norm_style="bn",
+    ):
+        """https://github.com/ajbrock/BigGAN-PyTorch/blob/98459431a5d618d644d54cd1e9fceb1e5045648d/layers.py#L278
+
+        :param output_size: [description]
+        :type output_size: [type]
+        :param input_size: [description]
+        :type input_size: [type]
+        :param which_linear: [description]
+        :type which_linear: [type]
+        :param eps: [description], defaults to 1e-5
+        :type eps: [type], optional
+        :param momentum: [description], defaults to 0.1
+        :type momentum: float, optional
+        :param cross_replica: [description], defaults to False
+        :type cross_replica: bool, optional
+        :param mybn: [description], defaults to False
+        :type mybn: bool, optional
+        :param norm_style: [description], defaults to "bn"
+        :type norm_style: str, optional
+        """
+        super(ccbn, self).__init__()
+        self.output_size, self.input_size = output_size, input_size
+        # Prepare gain and bias layers
+        self.gain = which_linear(input_size, output_size)
+        self.bias = which_linear(input_size, output_size)
+        # epsilon to avoid dividing by 0
+        self.eps = eps
+        # Momentum
+        self.momentum = momentum
+        # Use cross-replica batchnorm?
+        self.cross_replica = cross_replica
+        # Use my batchnorm?
+        self.mybn = mybn
+        # Norm style?
+        self.norm_style = norm_style
+
+        if self.norm_style in ["bn", "in"]:
+            self.register_buffer("stored_mean", torch.zeros(output_size))
+            self.register_buffer("stored_var", torch.ones(output_size))
+
+    def forward(self, x, y):
+        # Calculate class-conditional gains and biases
+        gain = (1 + self.gain(y)).view(y.size(0), -1, 1, 1)
+        bias = self.bias(y).view(y.size(0), -1, 1, 1)
+        # If using my batchnorm
+        if self.mybn or self.cross_replica:
+            return self.bn(x, gain=gain, bias=bias)
+        # else:
+        else:
+            if self.norm_style == "bn":
+                out = F.batch_norm(
+                    x,
+                    self.stored_mean,
+                    self.stored_var,
+                    None,
+                    None,
+                    self.training,
+                    0.1,
+                    self.eps,
+                )
+            elif self.norm_style == "in":
+                out = F.instance_norm(
+                    x,
+                    self.stored_mean,
+                    self.stored_var,
+                    None,
+                    None,
+                    self.training,
+                    0.1,
+                    self.eps,
+                )
+            elif self.norm_style == "nonorm":
+                out = x
+            return out * gain + bias
+
+    def extra_repr(self):
+        s = "out: {output_size}, in: {input_size},"
+        s += " cross_replica={cross_replica}"
+        return s.format(**self.__dict__)
