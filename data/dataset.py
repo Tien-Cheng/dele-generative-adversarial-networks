@@ -13,6 +13,7 @@ class CIFAR10DataModule(LightningDataModule):
         batch_size: int,
         num_workers: int,
         transforms: Optional[list] = None,
+        augments: Optional[list] = None,
     ):
         """Defines the CIFAR10 Dataset
 
@@ -30,8 +31,12 @@ class CIFAR10DataModule(LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
 
-        self.transform = T.Compose([T.ToTensor()] if transforms is None else transforms)
-
+        self.transform = [T.ToTensor()] if transforms is None else transforms
+        self.train_transform = (
+            self.transform if augments is None else self.transform + augments
+        )
+        self.transform = T.Compose(self.transform)
+        self.train_transform = T.Compose(self.train_transform)
         self.num_classes = 10
 
     def prepare_data(self):
@@ -47,7 +52,7 @@ class CIFAR10DataModule(LightningDataModule):
         """
         if stage == "fit" or stage is None:
             self.cifar_train = CIFAR10(
-                self.data_dir, train=True, transform=self.transform
+                self.data_dir, train=True, transform=self.train_transform
             )
             self.cifar_test = CIFAR10(
                 self.data_dir, train=False, transform=self.transform
