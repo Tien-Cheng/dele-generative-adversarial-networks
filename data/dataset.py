@@ -2,7 +2,7 @@ from typing import Optional
 
 import torchvision.transforms as T
 from pytorch_lightning import LightningDataModule
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader, ConcatDataset
 from torchvision.datasets import CIFAR10
 
 
@@ -57,6 +57,7 @@ class CIFAR10DataModule(LightningDataModule):
             self.cifar_test = CIFAR10(
                 self.data_dir, train=False, transform=self.transform
             )
+            self.cifar_full = ConcatDataset([self.cifar_train, self.cifar_test])
         if stage == "test" or stage is None:
             self.cifar_test = CIFAR10(
                 self.data_dir, train=False, transform=self.transform
@@ -64,7 +65,7 @@ class CIFAR10DataModule(LightningDataModule):
 
     def train_dataloader(self):
         return DataLoader(
-            self.cifar_train, batch_size=self.batch_size, num_workers=self.num_workers
+            self.cifar_full, batch_size=self.batch_size, num_workers=self.num_workers
         )
 
     def val_dataloader(self):
