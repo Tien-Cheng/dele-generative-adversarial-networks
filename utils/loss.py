@@ -26,11 +26,13 @@ class R1(nn.Module):
         """
         # Calc gradient
         grad_real = torch.autograd.grad(
-            outputs=prediction_real.sum(), inputs=real_sample, create_graph=True, , only_inputs=True
+            outputs=prediction_real.sum(),
+            inputs=real_sample,
+            create_graph=True,
+            only_inputs=True,
         )[0]
         # Calc regularization
         regularization_loss: torch.Tensor = (
-            self.gamma
-            * grad_real.pow(2).view(grad_real.shape[0], -1).sum(1).mean()
+            self.gamma * grad_real.pow(2).view(grad_real.shape[0], -1).sum(1).mean()
         )
         return regularization_loss
