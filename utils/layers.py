@@ -41,7 +41,7 @@ class NormalizeInverse(T.Normalize):
 #             1, 0.02
 #         )  # Initialise scale at N(1, 0.02)
 #         self.embed.weight.data[:, num_features:].zero_()  # Initialise bias at 0
-        
+
 #     def forward(self, x: torch.Tensor, y: torch.Tensor):
 #         out = self.bn(x)
 #         gamma, beta = self.embed(y).chunk(2, 1)
@@ -196,11 +196,11 @@ class ResidualBlockDiscriminatorHead(nn.Module):
 class ConditionalBatchNorm2d(nn.Module):
     def __init__(
         self,
-        num_classes,
-        num_features,
-        eps=1e-5,
-        momentum=0.1,
-        norm_style="bn",
+        num_classes: int = 10,
+        num_features: int = 256,
+        eps: float = 1e-5,
+        momentum: float = 0.1,
+        norm_style: str = "bn",
     ):
         """https://github.com/ajbrock/BigGAN-PyTorch/blob/98459431a5d618d644d54cd1e9fceb1e5045648d/layers.py#L278
 
