@@ -26,7 +26,7 @@ class R1(nn.Module):
         """
         # Calc gradient
         grad_real = torch.autograd.grad(
-            outputs=prediction_real.sum(), inputs=real_sample, create_graph=True
+            outputs=prediction_real.sum(), inputs=real_sample, create_graph=True, , only_inputs=True
         )[0]
         # Calc regularization
         regularization_loss: torch.Tensor = (
