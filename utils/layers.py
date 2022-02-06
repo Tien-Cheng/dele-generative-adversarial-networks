@@ -41,7 +41,7 @@ class NormalizeInverse(T.Normalize):
 #             1, 0.02
 #         )  # Initialise scale at N(1, 0.02)
 #         self.embed.weight.data[:, num_features:].zero_()  # Initialise bias at 0
-
+        
 #     def forward(self, x: torch.Tensor, y: torch.Tensor):
 #         out = self.bn(x)
 #         gamma, beta = self.embed(y).chunk(2, 1)
@@ -196,6 +196,7 @@ class ResidualBlockDiscriminatorHead(nn.Module):
 class ConditionalBatchNorm2d(nn.Module):
     def __init__(
         self,
+        num_classes,
         num_features,
         eps=1e-5,
         momentum=0.1,
@@ -216,6 +217,7 @@ class ConditionalBatchNorm2d(nn.Module):
         """
         super().__init__()
         self.num_features = num_features
+        self.embed = spectral_norm(nn.Embedding(num_classes, num_features))
         # Prepare gain and bias layers
         self.gain = spectral_norm(nn.Linear(num_features, num_features))
         self.bias = spectral_norm(nn.Linear(num_features, num_features))
@@ -232,8 +234,9 @@ class ConditionalBatchNorm2d(nn.Module):
 
     def forward(self, x, y):
         # Calculate class-conditional gains and biases
-        gain = (1 + self.gain(y)).view(y.size(0), -1, 1, 1)
-        bias = self.bias(y).view(y.size(0), -1, 1, 1)
+        y_embed = self.embed(y)
+        gain = (1 + self.gain(y_embed)).view(y_embed.size(0), -1, 1, 1)
+        bias = self.bias(y_embed).view(y.size(0), -1, 1, 1)
         if self.norm_style == "bn":
             out = F.batch_norm(
                 x,
