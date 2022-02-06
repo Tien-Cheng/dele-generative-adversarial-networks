@@ -35,3 +35,68 @@ class R1(nn.Module):
             self.gamma * grad_real.pow(2).view(grad_real.shape[0], -1).sum(1).mean()
         )
         return regularization_loss
+
+
+class HingeGANLossGenerator(nn.Module):
+    """
+    This class implements the Hinge generator GAN loss proposed in:
+    https://arxiv.org/pdf/1705.02894.pdf
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor method.
+        """
+        # Call super constructor
+        super().__init__()
+
+    def forward(
+        self, discriminator_prediction_fake: torch.Tensor, **kwargs
+    ) -> torch.Tensor:
+        """
+        Forward pass.
+        :param discriminator_prediction_fake: (torch.Tensor) Raw discriminator predictions for fake samples
+        :return: (torch.Tensor) Hinge Generator GAN loss with gradient
+        """
+        return -discriminator_prediction_fake.mean()
+
+
+class HingeGANLossDiscriminator(nn.Module):
+    """
+    This class implements the Hinge discriminator GAN loss proposed in:
+    https://arxiv.org/pdf/1705.02894.pdf
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor method.
+        """
+        # Call super constructor
+        super().__init__()
+
+    def forward(
+        self,
+        discriminator_prediction_real: torch.Tensor,
+        discriminator_prediction_fake: torch.Tensor,
+        **kwargs
+    ) -> torch.Tensor:
+        """
+        Forward pass.
+        :param discriminator_prediction_real: (torch.Tensor) Raw discriminator prediction for real samples
+        :param discriminator_prediction_fake: (torch.Tensor) Raw discriminator predictions for fake samples
+        :return: (torch.Tensor) Hinge discriminator GAN loss
+        """
+        return (
+            -torch.minimum(
+                torch.tensor(
+                    0.0, dtype=torch.float, device=discriminator_prediction_real.device
+                ),
+                discriminator_prediction_real - 1.0,
+            ).mean()
+            - torch.minimum(
+                torch.tensor(
+                    0.0, dtype=torch.float, device=discriminator_prediction_fake.device
+                ),
+                -discriminator_prediction_fake - 1.0,
+            ).mean()
+        )
