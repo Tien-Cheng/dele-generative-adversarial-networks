@@ -10,7 +10,7 @@ def visualize(
     labels: Optional[torch.Tensor] = None,
     label_names: Optional[List[str]] = None,
     grid_shape: Tuple[int, int] = (4, 4),
-    figsize: Tuple[int, int] = (13, 13),
+    figsize: Tuple[int, int] = (14, 14),
 ):
     if labels is None:
         return vutils.make_grid(imgs)
