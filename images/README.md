@@ -1,0 +1,1 @@
+The images in this folder are the final output of my GAN, with 100 images per class.
